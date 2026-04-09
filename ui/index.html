@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard — ServerOps{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Server Inventory</h1>
+    <p class="page-sub">{{ total }} servers tracked</p>
+  </div>
+  <div class="header-actions">
+    <a href="{{ url_for('export_csv') }}" class="btn btn-outline">↓ Export CSV</a>
+    <a href="{{ url_for('new_server') }}" class="btn btn-primary">+ Add Server</a>
+  </div>
+</div>
+
+<!-- Stats Bar -->
+<div class="stats-bar">
+  <div class="stat">
+    <span class="stat-num">{{ total }}</span>
+    <span class="stat-label">Total</span>
+  </div>
+  <div class="stat stat-online">
+    <span class="stat-num">{{ online }}</span>
+    <span class="stat-label">Online</span>
+  </div>
+  <div class="stat stat-offline">
+    <span class="stat-num">{{ offline }}</span>
+    <span class="stat-label">Offline</span>
+  </div>
+  <div class="stat stat-maint">
+    <span class="stat-num">{{ maintenance }}</span>
+    <span class="stat-label">Maintenance</span>
+  </div>
+</div>
+
+<!-- Filters -->
+<form method="GET" class="filter-bar">
+  <input class="input filter-search" type="text" name="q" value="{{ q }}" placeholder="Search hostname, IP, owner, team…">
+  <select class="input filter-select" name="status">
+    <option value="">All Status</option>
+    <option value="online" {% if status_filter=='online' %}selected{% endif %}>Online</option>
+    <option value="offline" {% if status_filter=='offline' %}selected{% endif %}>Offline</option>
+    <option value="maintenance" {% if status_filter=='maintenance' %}selected{% endif %}>Maintenance</option>
+  </select>
+  <select class="input filter-select" name="team">
+    <option value="">All Teams</option>
+    {% for t in teams %}
+    <option value="{{ t }}" {% if team_filter==t %}selected{% endif %}>{{ t }}</option>
+    {% endfor %}
+  </select>
+  <button class="btn btn-outline" type="submit">Filter</button>
+  {% if q or status_filter or team_filter %}
+  <a href="{{ url_for('index') }}" class="btn btn-ghost">Clear</a>
+  {% endif %}
+</form>
+
+<!-- Table -->
+<div class="table-wrap">
+  {% if servers %}
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Hostname</th>
+        <th>IP Address</th>
+        <th>OS</th>
+        <th>Specs</th>
+        <th>Location</th>
+        <th>Status</th>
+        <th>Owner / Team</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for s in servers %}
+      <tr class="row-{{ s.status }}">
+        <td class="mono bold">{{ s.hostname }}</td>
+        <td class="mono">{{ s.ip_address }}</td>
+        <td>
+          <span class="os-badge">{{ s.os_name or '—' }}</span>
+          <span class="os-ver">{{ s.os_version or '' }}</span>
+        </td>
+        <td class="specs">
+          {% if s.cpu %}<div class="spec-row">CPU: {{ s.cpu }}</div>{% endif %}
+          {% if s.ram_gb %}<div class="spec-row">RAM: {{ s.ram_gb }} GB</div>{% endif %}
+          {% if s.disk_tb %}<div class="spec-row">Disk: {{ s.disk_tb }} TB</div>{% endif %}
+        </td>
+        <td>
+          {% if s.location %}<div>{{ s.location }}</div>{% endif %}
+          {% if s.rack %}<div class="rack-label">{{ s.rack }}</div>{% endif %}
+        </td>
+        <td><span class="status-badge status-{{ s.status }}">{{ s.status }}</span></td>
+        <td>
+          {% if s.owner %}<div>{{ s.owner }}</div>{% endif %}
+          {% if s.team %}<div class="team-label">{{ s.team }}</div>{% endif %}
+        </td>
+        <td class="actions">
+          <a href="{{ url_for('edit_server', id=s.id) }}" class="action-btn action-edit">Edit</a>
+          <form method="POST" action="{{ url_for('delete_server', id=s.id) }}" style="display:inline" onsubmit="return confirm('Delete {{ s.hostname }}?')">
+            <button class="action-btn action-delete" type="submit">Delete</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <div class="empty-state">
+    <p>No servers found.</p>
+    {% if q or status_filter or team_filter %}
+    <a href="{{ url_for('index') }}">Clear filters</a>
+    {% else %}
+    <a href="{{ url_for('new_server') }}">Add your first server →</a>
+    {% endif %}
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
