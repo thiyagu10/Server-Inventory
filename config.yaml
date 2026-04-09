@@ -1,0 +1,29 @@
+agent:
+  hostname: ""          # leave empty to use os.Hostname()
+  log_level: info       # debug | info | warn | error
+
+# ── Intervals ──────────────────────────────────────────────────────
+intervals:
+  cpufreq:  1s          # CPU frequency — safe at 1s
+  numastat: 5s          # NUMA memory stats
+  redfish:  15s         # BMC Redfish — don't go below 10s
+
+# ── Redfish (BMC) ──────────────────────────────────────────────────
+redfish:
+  bmc_address: 192.168.1.10       # IP of your iDRAC / iLO / XCC
+  username: ${REDFISH_USER}       # use env vars for secrets
+  password: ${REDFISH_PASS}
+  tls_verify: false               # set true in production with valid BMC cert
+  timeout: 10s
+
+# ── Exporters ──────────────────────────────────────────────────────
+exporter:
+  # InfluxDB v2
+  influx_url:    http://influxdb:8086
+  influx_token:  ${INFLUX_TOKEN}
+  influx_org:    myorg
+  influx_bucket: server_metrics
+
+  # Prometheus endpoint (optional — /metrics on port 9200)
+  prometheus_enabled: true
+  prometheus_port: 9200
